@@ -1,0 +1,209 @@
+' s
+' usrpRX <- host : find_device(ip_addr,ethernet)
+
+' usrpRX <- host: issue recv(buffer,buffer_size)
+
+' usrpRX -> host : send  data to buffer
+
+' host->host : write buffer to file
+
+
+' actibity diagram
+
+
+' |host|
+
+' start 
+
+
+' partition init{
+'     :openfile;
+'    #Orange :alloc_buf;
+'    note left: buf size aligned \n ethernet mtu
+
+' }
+
+
+
+' partition RX_Conf {
+'     :creat_usrp;
+'     note left: acquire device \n \t pointer
+'     :conf_RF;
+'     note left: freq,sample rate\n gain, channel\n antenna
+'     :creat RF stream;
+'      note left: sample type\n 
+
+' }
+
+
+' partition RX_stream {
+'     while(timer_slapsed?)
+'     -> false;
+
+'     :issue recv(); 
+'     note left: 10G ethernet    
+'     -[dashed]-> buf size, sample type;
+
+
+
+
+
+
+
+' |#AntiqueWhite|usrpRX|
+' : recv; 
+' note right: receive data from RF chain
+' -[dashed]-> \n\nsend data\nto buffer;
+
+' |host|
+' #Orange:buffer ready;
+' :write to file;
+
+' endwhile 
+
+' }
+' ->true;
+
+' stop
+
+' |host|
+
+' start 
+
+
+' partition init{
+'     :openfile;
+'    #Orange :alloc_buf;
+'    note left: buf size aligned \n ethernet mtu
+
+' }
+
+
+
+' partition TX_Conf {
+'     :creat_usrp;
+'     note left: acquire device \n \t pointer
+'     :conf_TF;
+'     note left: freq,sample rate\n gain, channel\n antenna
+'     :creat TX stream;
+'      note left: sample type\n 
+
+' }
+
+
+' partition TX_stream {
+'     while(timer_slapsed?)
+'     -> false;
+
+'     #Orange:write buffer;
+
+'     :issue send(); 
+'     note left: 10G ethernet    
+'     -[dashed]-> buf size, sample type;
+
+
+
+
+
+
+
+' |#AntiqueWhite|usrpTX|
+' : send; 
+' note right: send data to RF chain
+' -[dashed]->: \n\n return meta info ;
+
+' |host|
+' : handle exceptions;
+
+' endwhile 
+
+' }
+' ->true;
+
+' stop
+
+
+
+
+
+
+
+
+
+
+' |host|
+
+' start 
+
+
+' partition init{
+'     :openfile;
+'    #Orange :alloc_buf;
+'    note left: buf size aligned \n ethernet mtu
+
+' }
+
+
+
+' partition TX_Conf {
+'     :creat_usrp;
+'     note left: acquire device \n \t pointer
+'     :conf_TF;
+'     note left: freq,sample rate\n gain, channel\n antenna
+'     :creat TX stream;
+'      note left: sample type\n 
+
+' }
+
+
+' partition TX_stream {
+'     while(timer_slapsed?)
+'     -> false;
+
+'     split 
+'     -[dashed]-> liburing or libaio;
+'     #Orange:write buffer 0;
+    
+'     split again 
+'     #Orange:write buffer 1;
+'         split again 
+'     #Orange:..;
+'     end split
+ 
+'     :issue send(); 
+'     note left: 10G ethernet    
+'     -[dashed]-> bufs size, sample type;
+
+
+
+
+
+
+
+' |#AntiqueWhite|Multi_TX|
+' : send; 
+' note right: send data to RF chain
+' -[dashed]-> \n\n return meta info ;
+
+' |host|
+' : handle exceptions;
+
+' endwhile 
+
+' }
+' ->true;
+
+' stop
+
+' @enduml
+
+
+@startuml
+
+start 
+-[#80bdff]-> RSS/phase samples;
+#ffffff:estimate AOA/AOD;
+#ffffff:construct multiple paths;
+#ffffff:estimate each path length;
+
+@enduml
